@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Threading;
 using System;
+using System.Text;
 
 namespace QuickFix
 {
@@ -33,6 +34,7 @@ namespace QuickFix
         private volatile bool isShutdownRequested_ = false;
         private SocketReader socketReader_;
         private FileLog log_;
+        private Encoding _messageEncoding;
 
         [Obsolete("Don't use this constructor")]
         public ClientHandlerThread(TcpClient tcpClient, long clientId)
@@ -64,7 +66,9 @@ namespace QuickFix
             log_ = new FileLog(debugLogFilePath, new SessionID("ClientHandlerThread", clientId.ToString(), "Debug"));
 
             this.Id = clientId;
-            socketReader_ = new SocketReader(tcpClient, socketSettings, this);
+
+            _messageEncoding = settingsDict.GetEncoding(SessionSettings.MESSAGE_ENCODING);
+            socketReader_ = new SocketReader(tcpClient, socketSettings, this, _messageEncoding);
         }
 
         public void Start()

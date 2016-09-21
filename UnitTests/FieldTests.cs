@@ -185,5 +185,17 @@ namespace UnitTests
             Assert.False(a1.Equals(diffTag));
             Assert.False(a1.Equals(diffType));
         }
+
+        [Test]
+        public void StringFieldTest_DifferentEncodings()
+        {
+            var stringField = new StringField(Tags.EncodedHeadline, "áÁéÉíÍóÓúÚ");
+
+            Assert.AreEqual(3749, stringField.getTotal(Encoding.UTF8));
+            Assert.AreEqual(25, stringField.getLength(Encoding.UTF8));
+
+            Assert.AreEqual(2439, stringField.getTotal(Encoding.GetEncoding("ISO-8859-1")));
+            Assert.AreEqual(15, stringField.getLength(Encoding.GetEncoding("ISO-8859-1")));
+        }
     }
 }

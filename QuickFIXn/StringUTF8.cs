@@ -8,14 +8,18 @@ namespace QuickFix
     public class ByteSizeString
     {
         public ByteSizeString(byte[] buf, int sz)
-        {
-            this._str = new byte[sz];
-            for (int i = 0; i < sz; i++)
-                _str[i] = buf[i];
-        }
+            :this(buf, 0, sz, Encoding.UTF8)
+        { }
 
+        [Obsolete("Use constructor with encoding")]
         public ByteSizeString(byte[] buf, int pos, int sz)
+            :this(buf, pos, sz, Encoding.UTF8)
+        { }
+
+        public ByteSizeString(byte[] buf, int pos, int sz, Encoding encoding)
         {
+            _encoding = encoding;
+
             this._str = new byte[sz];
             for (int i = 0; i < sz; i++)
                 _str[i] = buf[i+pos];
@@ -23,7 +27,7 @@ namespace QuickFix
 
         public override string ToString()
         {
-            return Encoding.UTF8.GetString(_str);
+            return _encoding.GetString(_str);
         }
 
         public int IndexOf( byte nextchar, int pos )
@@ -59,7 +63,7 @@ namespace QuickFix
         {
             int start = pos;
             pos = IndexOf(SOH, start);
-            ByteSizeString ret = new ByteSizeString(_str, start, pos - start);
+            ByteSizeString ret = new ByteSizeString(_str, start, pos - start, _encoding);
             pos += 1;
             return ret;
         }
@@ -76,6 +80,7 @@ namespace QuickFix
         private byte[] _str;
         private const byte EQ = 61;
         private const byte SOH = 1;
+        private readonly Encoding _encoding;
         #endregion
     }
 }

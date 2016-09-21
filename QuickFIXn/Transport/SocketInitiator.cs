@@ -230,7 +230,8 @@ namespace QuickFix.Transport
                 socketSettings.Configure(settings);
 
                 // Create a Ssl-SocketInitiatorThread if a certificate is given
-                SocketInitiatorThread t = new SocketInitiatorThread(this, session, socketEndPoint, socketSettings);                
+                var encoding = settings.GetEncoding(SessionSettings.MESSAGE_ENCODING);
+                SocketInitiatorThread t = new SocketInitiatorThread(this, session, socketEndPoint, socketSettings, encoding);                
                 t.Start();
                 AddThread(t);
 

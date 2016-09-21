@@ -207,14 +207,15 @@ namespace QuickFix
                 var encoding = Encoding.GetEncoding(key);
                 return encoding;
             }
-            catch (QuickFIXException)
-            {
-                throw new ConfigError("No value for key: " + key);
-            }
             catch (ArgumentException)
             {
                 throw new ConfigError("No recognized code page name for encoding.");
             }
+            catch (QuickFIXException)
+            {
+                return Encoding.UTF8;
+            }
+            
         }
         #endregion
 

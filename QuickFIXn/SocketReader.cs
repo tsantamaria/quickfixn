@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.IO;
 using System;
+using System.Text;
 
 namespace QuickFix
 {
@@ -12,11 +13,12 @@ namespace QuickFix
     {
         public const int BUF_SIZE = 4096;
         byte[] readBuffer_ = new byte[BUF_SIZE];
-        private Parser parser_ = new Parser();
+        private readonly Parser parser_;
         private Session qfSession_; //will be null when initialized
         private Stream stream_;     //will be null when initialized
         private TcpClient tcpClient_;
         private ClientHandlerThread responder_;
+        private readonly Encoding _messageEncoding; 
 
         /// <summary>
         /// Keep a handle to the current outstanding read request (if any)
@@ -25,15 +27,22 @@ namespace QuickFix
 
         [Obsolete("Use other constructor")]
         public SocketReader(TcpClient tcpClient, ClientHandlerThread responder)
-            : this(tcpClient, new SocketSettings(), responder)
+            : this(tcpClient, new SocketSettings(), responder, Encoding.UTF8)
         {
         }
 
+        [Obsolete("Use other constructor (with encoding).")]
         public SocketReader(TcpClient tcpClient, SocketSettings settings, ClientHandlerThread responder)
+            :this(tcpClient, settings, responder, Encoding.UTF8)
+        { }
+
+        public SocketReader(TcpClient tcpClient, SocketSettings settings, ClientHandlerThread responder, Encoding encoding)
         {
             tcpClient_ = tcpClient;
             responder_ = responder;
             stream_ = Transport.StreamFactory.CreateServerStream(tcpClient, settings, responder.GetLog());
+            _messageEncoding = encoding;
+            parser_ = new Parser(encoding);
         }
 
         /// <summary> FIXME </summary>
@@ -43,7 +52,7 @@ namespace QuickFix
             {
                 int bytesRead = ReadSome(readBuffer_, 1000);
                 if (bytesRead > 0)
-                    parser_.AddToStream(System.Text.Encoding.UTF8.GetString(readBuffer_, 0, bytesRead));
+                    parser_.AddToStream(_messageEncoding.GetString(readBuffer_, 0, bytesRead));
                 else if (null != qfSession_)
                 {
                     qfSession_.Next();
@@ -131,7 +140,7 @@ namespace QuickFix
             {
                 if (null == qfSession_)
                 {
-                    qfSession_ = Session.LookupSession(Message.GetReverseSessionID(msg));
+                    qfSession_ = Session.LookupSession(Message.GetReverseSessionID(msg, _messageEncoding));
                     if (null == qfSession_)
                     {
                         this.Log("ERROR: Disconnecting; received message for unknown session: " + msg);
@@ -304,7 +313,7 @@ namespace QuickFix
 
         public int Send(string data)
         {
-            byte[] rawData = System.Text.Encoding.UTF8.GetBytes(data);
+            byte[] rawData = _messageEncoding.GetBytes(data);
             stream_.Write(rawData, 0, rawData.Length);
             return rawData.Length;
         }

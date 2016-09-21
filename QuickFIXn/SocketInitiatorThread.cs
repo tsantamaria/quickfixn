@@ -4,6 +4,7 @@ using System.Threading;
 using System.IO;
 using System;
 using System.Diagnostics;
+using System.Text;
 
 namespace QuickFix
 {
@@ -26,16 +27,23 @@ namespace QuickFix
         private IPEndPoint socketEndPoint_;
         protected SocketSettings socketSettings_;
         private bool isDisconnectRequested_ = false;
+        private readonly Encoding _messageEncoding;
 
+        [Obsolete("Use constructor with Encoding.")]
         public SocketInitiatorThread(Transport.SocketInitiator initiator, Session session, IPEndPoint socketEndPoint, SocketSettings socketSettings)
+            :this(initiator, session, socketEndPoint, socketSettings, Encoding.UTF8)
+        { }
+
+        public SocketInitiatorThread(Transport.SocketInitiator initiator, Session session, IPEndPoint socketEndPoint, SocketSettings socketSettings, Encoding encoding)
         {
             isDisconnectRequested_ = false;
             initiator_ = initiator;
             session_ = session;
             socketEndPoint_ = socketEndPoint;
-            parser_ = new Parser();
+            parser_ = new Parser(encoding);
             session_ = session;
             socketSettings_ = socketSettings;
+            _messageEncoding = encoding;
         }
 
         public void Start()
@@ -81,7 +89,7 @@ namespace QuickFix
             {
                 int bytesRead = ReadSome(readBuffer_, 1000);
                 if (bytesRead > 0)
-                    parser_.AddToStream(System.Text.Encoding.UTF8.GetString(readBuffer_, 0, bytesRead));
+                    parser_.AddToStream(_messageEncoding.GetString(readBuffer_, 0, bytesRead));
                 else if (null != session_)
                 {
                     session_.Next();
@@ -189,7 +197,7 @@ namespace QuickFix
 
         public bool Send(string data)
         {
-            byte[] rawData = System.Text.Encoding.UTF8.GetBytes(data);
+            byte[] rawData = _messageEncoding.GetBytes(data);
             stream_.Write(rawData, 0, rawData.Length);
             return true;
         }

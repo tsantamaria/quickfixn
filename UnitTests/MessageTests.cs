@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using QuickFix;
 using QuickFix.Fields;
@@ -827,7 +828,7 @@ namespace UnitTests
             string msgStr = String.Join(Message.SOH, msgFields) + Message.SOH;
 
             QuickFix.FIX44.ExecutionReport msg = new QuickFix.FIX44.ExecutionReport();
-            msg.FromString(msgStr, true, dd, dd, null); // <-- null factory!
+            msg.FromString(msgStr, true, dd, dd, (IMessageFactory)null, Encoding.UTF8); // <-- null factory!
 
             Console.WriteLine(msg.ToString());
 
