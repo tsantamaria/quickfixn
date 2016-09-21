@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using QuickFix.Fields;
 
 namespace QuickFix
@@ -24,6 +25,7 @@ namespace QuickFix
         private IMessageFactory msgFactory_;
         private bool appDoesEarlyIntercept_;
         private static readonly HashSet<string> AdminMsgTypes = new HashSet<string>() { "0", "A", "1", "2", "3", "4", "5" };
+        private readonly Encoding _messageEncoding;
 
         #endregion
 
@@ -208,9 +210,16 @@ namespace QuickFix
 
         #endregion
 
+        [Obsolete("Use constructor with Encoding")]
         public Session(
             IApplication app, IMessageStoreFactory storeFactory, SessionID sessID, DataDictionaryProvider dataDictProvider,
             SessionSchedule sessionSchedule, int heartBtInt, ILogFactory logFactory, IMessageFactory msgFactory, string senderDefaultApplVerID)
+            :this(app, storeFactory, sessID, dataDictProvider, sessionSchedule, heartBtInt, logFactory, msgFactory, senderDefaultApplVerID, Encoding.UTF8)
+        { }
+
+        public Session(
+            IApplication app, IMessageStoreFactory storeFactory, SessionID sessID, DataDictionaryProvider dataDictProvider,
+            SessionSchedule sessionSchedule, int heartBtInt, ILogFactory logFactory, IMessageFactory msgFactory, string senderDefaultApplVerID, Encoding encoding)
         {
             this.Application = app;
             this.SessionID = sessID;
@@ -218,6 +227,7 @@ namespace QuickFix
             this.schedule_ = sessionSchedule;
             this.msgFactory_ = msgFactory;
             this.appDoesEarlyIntercept_ = app is IApplicationExt;
+            this._messageEncoding = encoding;
 
             this.SenderDefaultApplVerID = senderDefaultApplVerID;
 
@@ -267,6 +277,7 @@ namespace QuickFix
 
             this.Application.OnCreate(this.SessionID);
             this.Log.OnEvent("Created session");
+            this.Log.OnEvent($"Using encoding {_messageEncoding.BodyName} ('{_messageEncoding.EncodingName}')");
         }
 
         #region Static Methods
@@ -549,7 +560,7 @@ namespace QuickFix
 
             try
             {
-                message = msgBuilder.Build();
+                message = msgBuilder.Build(_messageEncoding);
 
                 if (appDoesEarlyIntercept_)
                     ((IApplicationExt)Application).FromEarlyIntercept(message, this.SessionID);
@@ -771,7 +782,7 @@ namespace QuickFix
                     foreach (string msgStr in messages)
                     {
                         Message msg = new Message();
-                        msg.FromString(msgStr, true, this.SessionDataDictionary, this.ApplicationDataDictionary, msgFactory_);
+                        msg.FromString(msgStr, true, this.SessionDataDictionary, this.ApplicationDataDictionary, msgFactory_, _messageEncoding);
                         msgSeqNum = msg.Header.GetInt(Tags.MsgSeqNum);
 
                         if ((current != msgSeqNum) && begin == 0)
@@ -799,7 +810,7 @@ namespace QuickFix
                             {
                                 GenerateSequenceReset(resendReq, begin, msgSeqNum);
                             }
-                            Send(msg.ToString());
+                            Send(msg.ToString(_messageEncoding));
                             begin = 0;
                         }
                         current = msgSeqNum + 1;
@@ -1585,7 +1596,7 @@ namespace QuickFix
                 }
                 else
                 {
-                    NextMessage(msg.ToString());
+                    NextMessage(msg.ToString(_messageEncoding));
                 }
                 return true;
             }

@@ -39,7 +39,7 @@ namespace QuickFix
             _beginString = Message.ExtractBeginString(_msgStr);
         }
 
-        internal Message Build()
+        internal Message Build(Encoding encoding)
         {
             Message message = _msgFactory.Create(_beginString, _msgType.Obj);
             message.FromString(
@@ -47,7 +47,8 @@ namespace QuickFix
                 _validateLengthAndChecksum,
                 _sessionDD,
                 _appDD,
-                _msgFactory);
+                _msgFactory,
+                encoding);
             _message = message;
             return _message;
         }

@@ -548,30 +548,42 @@ namespace QuickFix
             return ((_fields.Count == 0) && (_groups.Count == 0));
         }
 
+        [Obsolete("Use method with Encoding.")]
         public int CalculateTotal()
+        {
+            return CalculateTotal(Encoding.UTF8);
+        }
+
+        public int CalculateTotal(Encoding encoding)
         {
             int total = 0;
             foreach (Fields.IField field in _fields.Values)
             {
                 if (field.Tag != Fields.Tags.CheckSum)
-                    total += field.getTotal();
+                    total += field.getTotal(encoding);
             }
 
             foreach (Fields.IField field in this.RepeatedTags)
             {
                 if (field.Tag != Fields.Tags.CheckSum)
-                    total += field.getTotal();
+                    total += field.getTotal(encoding);
             }
 
             foreach (List<Group> groupList in _groups.Values)
             {
                 foreach (Group group in groupList)
-                    total += group.CalculateTotal();
+                    total += group.CalculateTotal(encoding);
             }
             return total;
         }
 
+        [Obsolete("Use method with Encoding.")]
         public int CalculateLength()
+        {
+            return CalculateLength(Encoding.UTF8);
+        }
+
+        public int CalculateLength(Encoding encoding)
         {
             int total = 0;
             foreach (Fields.IField field in _fields.Values)
@@ -581,7 +593,7 @@ namespace QuickFix
                     && field.Tag != Tags.BodyLength
                     && field.Tag != Tags.CheckSum)
                 {
-                    total += field.getLength();
+                    total += field.getLength(encoding);
                 }
             }
 
@@ -592,14 +604,14 @@ namespace QuickFix
                     && field.Tag != Tags.BodyLength
                     && field.Tag != Tags.CheckSum)
                 {
-                    total += field.getLength();
+                    total += field.getLength(encoding);
                 }
             }
 
             foreach (List<Group> groupList in _groups.Values)
             {
                 foreach (Group group in groupList)
-                    total += group.CalculateLength();
+                    total += group.CalculateLength(encoding);
             }
     
             return total;

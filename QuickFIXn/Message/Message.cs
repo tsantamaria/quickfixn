@@ -66,28 +66,49 @@ namespace QuickFix
             this.validStructure_ = true;
         }
 
-        public Message(string msgstr)
-            : this(msgstr, true)
+        [Obsolete("Use constructor with Encoding")]
+        public Message(string msgstr) : this(msgstr, true)
         { }
 
+        public Message(string msgstr, Encoding encoding)
+            : this(msgstr, true, encoding)
+        { }
+
+        [Obsolete("Use constructor with Encoding")]
         public Message(string msgstr, bool validate)
             : this(msgstr, null, null, validate)
-        {  }
+        { }
 
+        public Message(string msgstr, bool validate, Encoding encoding)
+            : this(msgstr, null, null, validate, encoding)
+        { }
+
+        [Obsolete("Use constructor with Encoding")]
         public Message(string msgstr, DataDictionary.DataDictionary dataDictionary, bool validate)
+            : this(msgstr, dataDictionary, validate, Encoding.UTF8)
+        { }
+
+        public Message(string msgstr, DataDictionary.DataDictionary dataDictionary, bool validate, Encoding encoding)
             : this()
         {
-            FromString(msgstr, validate, dataDictionary, dataDictionary, null);
+            FromString(msgstr, validate, dataDictionary, dataDictionary, null, encoding);
         }
 
-        public Message(string msgstr, DataDictionary.DataDictionary sessionDataDictionary, DataDictionary.DataDictionary appDD, bool validate)
+        [Obsolete("Use constructor with Encoding")]
+        public Message(string msgstr, DataDictionary.DataDictionary sessionDataDictionary,
+            DataDictionary.DataDictionary appDD, bool validate)
+            :this(msgstr, sessionDataDictionary, appDD, validate, Encoding.UTF8)
+        {
+        }
+
+        public Message(string msgstr, DataDictionary.DataDictionary sessionDataDictionary, DataDictionary.DataDictionary appDD, bool validate, Encoding encoding)
             : this()
         {
             FromStringHeader(msgstr);
             if(IsAdmin())
-                FromString(msgstr, validate, sessionDataDictionary, sessionDataDictionary, null);
+                FromString(msgstr, validate, sessionDataDictionary, sessionDataDictionary, null, encoding);
             else
-                FromString(msgstr, validate, sessionDataDictionary, appDD, null);
+                FromString(msgstr, validate, sessionDataDictionary, appDD, null, encoding);
         }
 
         public Message(Message src)
@@ -273,14 +294,21 @@ namespace QuickFix
             );
         }
 
+        [Obsolete("Use version with Encoding.")]
+        public static SessionID GetReverseSessionID(string msg)
+        {
+            return GetReverseSessionID(msg, Encoding.UTF8);
+        }
+
         /// <summary>
         /// FIXME works, but implementation is shady
         /// </summary>
         /// <param name="msg"></param>
+        /// <param name="encoding"></param>
         /// <returns></returns>
-        public static SessionID GetReverseSessionID(string msg)
+        public static SessionID GetReverseSessionID(string msg, Encoding encoding)
         {
-            Message FIXME = new Message(msg);
+            Message FIXME = new Message(msg, encoding);
             return GetReverseSessionID(FIXME);
         }
 
@@ -347,6 +375,13 @@ namespace QuickFix
             return true;
         }
 
+        [Obsolete("Use method with Encoding.")]
+        public void FromString(string msgstr, bool validate, DataDictionary.DataDictionary sessionDD,
+            DataDictionary.DataDictionary appDD)
+        {
+            FromString(msgstr, validate, sessionDD, appDD, Encoding.UTF8);
+        }
+
         /// <summary>
         /// Creates a Message from a FIX string
         /// </summary>
@@ -354,9 +389,17 @@ namespace QuickFix
         /// <param name="validate"></param>
         /// <param name="sessionDD"></param>
         /// <param name="appDD"></param>
-        public void FromString(string msgstr, bool validate, DataDictionary.DataDictionary sessionDD, DataDictionary.DataDictionary appDD)
+        /// <param name="encoding"></param>
+        public void FromString(string msgstr, bool validate, DataDictionary.DataDictionary sessionDD, DataDictionary.DataDictionary appDD, Encoding encoding)
         {
-            FromString(msgstr, validate, sessionDD, appDD, null);
+            FromString(msgstr, validate, sessionDD, appDD, null, encoding);
+        }
+
+        [Obsolete("Use method with Encoding.")]
+        public void FromString(string msgstr, bool validate,
+            DataDictionary.DataDictionary sessionDD, DataDictionary.DataDictionary appDD, IMessageFactory msgFactory)
+        {
+            FromString(msgstr, validate, sessionDD, appDD, msgFactory, Encoding.UTF8);
         }
 
         /// <summary>
@@ -367,10 +410,19 @@ namespace QuickFix
         /// <param name="sessionDD"></param>
         /// <param name="appDD"></param>
         /// <param name="msgFactory">If null, any groups will be constructed as generic Group objects</param>
+        /// <param name="encoding"></param>
         public void FromString(string msgstr, bool validate,
-            DataDictionary.DataDictionary sessionDD, DataDictionary.DataDictionary appDD, IMessageFactory msgFactory)
+            DataDictionary.DataDictionary sessionDD, DataDictionary.DataDictionary appDD, IMessageFactory msgFactory, Encoding encoding)
         {
-            FromString(msgstr, validate, sessionDD, appDD, msgFactory, false);
+            FromString(msgstr, validate, sessionDD, appDD, msgFactory, false, encoding);
+        }
+
+        [Obsolete("Use method with Encoding.")]
+        public void FromString(string msgstr, bool validate,
+            DataDictionary.DataDictionary sessionDD, DataDictionary.DataDictionary appDD, IMessageFactory msgFactory,
+            bool ignoreBody)
+        {
+            FromString(msgstr, validate, sessionDD, appDD, msgFactory, false, Encoding.UTF8);
         }
 
         /// <summary>
@@ -384,9 +436,10 @@ namespace QuickFix
         /// <param name="ignoreBody">(default false) if true, ignores all non-header non-trailer fields.
         ///   Intended for callers that only need rejection-related information from the header.
         ///   </param>
+        /// <param name="encoding">Encoding for in/out purposes</param>
         public void FromString(string msgstr, bool validate,
             DataDictionary.DataDictionary sessionDD, DataDictionary.DataDictionary appDD, IMessageFactory msgFactory,
-            bool ignoreBody)
+            bool ignoreBody, Encoding encoding)
         {
             Clear();
 
@@ -467,7 +520,7 @@ namespace QuickFix
 
             if (validate)
             {
-                Validate();
+                Validate(encoding);
             }
         }
 
@@ -558,17 +611,23 @@ namespace QuickFix
             return validStructure_;
         }
 
+        [Obsolete("Use method with Encoding.")]
         public void Validate()
+        {
+            Validate(Encoding.UTF8);
+        }
+
+        public void Validate(Encoding encoding)
         {
             try
             {
                 int receivedBodyLength = this.Header.GetInt(Tags.BodyLength);
-                if (BodyLength() != receivedBodyLength)
-                    throw new InvalidMessage("Expected BodyLength=" + BodyLength() + ", Received BodyLength=" + receivedBodyLength);
+                if (BodyLength(encoding) != receivedBodyLength)
+                    throw new InvalidMessage($"Expected BodyLength={BodyLength(encoding)} (Encoding {encoding.BodyName}), Received BodyLength={receivedBodyLength}");
 
                 int receivedCheckSum = this.Trailer.GetInt(Tags.CheckSum);
-                if (CheckSum() != receivedCheckSum)
-                    throw new InvalidMessage("Expected CheckSum=" + CheckSum() + ", Received CheckSum=" + receivedCheckSum);
+                if (CheckSum(encoding) != receivedCheckSum)
+                    throw new InvalidMessage($"Expected CheckSum={CheckSum(encoding)} (Encoding {encoding.BodyName}), Received CheckSum={receivedCheckSum}");
             }
             catch (FieldNotFoundException e)
             {
@@ -701,12 +760,18 @@ namespace QuickFix
             }
         }
 
+        [Obsolete("Use method with Encoding.")]
         public int CheckSum()
         {
+            return CheckSum(Encoding.UTF8);
+        }
+
+        public int CheckSum(Encoding encoding)
+        {
             return (
-                (this.Header.CalculateTotal()
-                + CalculateTotal()
-                + this.Trailer.CalculateTotal()) % 256);
+                (this.Header.CalculateTotal(encoding)
+                + CalculateTotal(encoding)
+                + this.Trailer.CalculateTotal(encoding)) % 256);
         }
 
         public bool IsAdmin()
@@ -769,20 +834,32 @@ namespace QuickFix
         }
 
         private Object lock_ToString = new Object();
+
         public override string ToString()
+        {
+            return ToString(Encoding.UTF8);
+        }
+
+        public string ToString(Encoding encoding)
         {
             lock (lock_ToString)
             {
-                this.Header.SetField(new BodyLength(BodyLength()), true);
-                this.Trailer.SetField(new CheckSum(Fields.Converters.CheckSumConverter.Convert(CheckSum())), true);
+                this.Header.SetField(new BodyLength(BodyLength(encoding)), true);
+                this.Trailer.SetField(new CheckSum(Fields.Converters.CheckSumConverter.Convert(CheckSum(encoding))), true);
 
                 return this.Header.CalculateString() + CalculateString() + this.Trailer.CalculateString();
             }
         }
 
+        [Obsolete("Use method with Encoding.")]
         protected int BodyLength()
         {
-            return this.Header.CalculateLength() + CalculateLength() + this.Trailer.CalculateLength();
+            return BodyLength(Encoding.UTF8);
+        }
+
+        protected int BodyLength(Encoding encoding)
+        {
+            return this.Header.CalculateLength(encoding) + CalculateLength(encoding) + this.Trailer.CalculateLength(encoding);
         }
     }
 }

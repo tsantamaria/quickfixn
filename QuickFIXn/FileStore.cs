@@ -31,6 +31,11 @@ namespace QuickFix
         private System.IO.FileStream msgFile_;
         private System.IO.StreamWriter headerFile_;
 
+        /// <summary>
+        /// Encoding for outgoing and decoding for incoming messages.
+        /// </summary>
+        private readonly Encoding _messageEncoding;
+
         private MemoryStore cache_ = new MemoryStore();
 
         System.Collections.Generic.Dictionary<int, MsgDef> offsets_ = new Dictionary<int, MsgDef>();
@@ -55,8 +60,16 @@ namespace QuickFix
             return prefix.ToString();
         }
 
+        [Obsolete("Use constructor with Encoding.")]
         public FileStore(string path, SessionID sessionID)
+            :this(path, sessionID, Encoding.UTF8)
         {
+        }
+
+        public FileStore(string path, SessionID sessionID, Encoding messageEncoding)
+        {
+            _messageEncoding = messageEncoding;
+
             if (!System.IO.Directory.Exists(path))
                 System.IO.Directory.CreateDirectory(path);
 
@@ -183,7 +196,7 @@ namespace QuickFix
                     byte[] msgBytes = new byte[offsets_[i].size];
                     msgFile_.Read(msgBytes, 0, msgBytes.Length);
 
-                    messages.Add(Encoding.UTF8.GetString(msgBytes));
+                    messages.Add(_messageEncoding.GetString(msgBytes));
                 }
             }
 
@@ -200,7 +213,7 @@ namespace QuickFix
             msgFile_.Seek(0, System.IO.SeekOrigin.End);
 
             long offset = msgFile_.Position;
-            byte[] msgBytes = Encoding.UTF8.GetBytes(msg);
+            byte[] msgBytes = _messageEncoding.GetBytes(msg);
             int size = msgBytes.Length;
 
             StringBuilder b = new StringBuilder();

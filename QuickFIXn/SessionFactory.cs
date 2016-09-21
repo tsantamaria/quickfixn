@@ -73,6 +73,8 @@ namespace QuickFix
             if(defaultApplVerID != null)
                 senderDefaultApplVerId = defaultApplVerID.Obj;
 
+            var encoding = settings.GetEncoding(SessionSettings.MESSAGE_ENCODING);
+
             Session session = new Session(
                 application_,
                 messageStoreFactory_,
@@ -82,7 +84,8 @@ namespace QuickFix
                 heartBtInt,
                 logFactory_,
                 messageFactory_,
-                senderDefaultApplVerId);
+                senderDefaultApplVerId,
+                encoding);
 
             if (settings.Has(SessionSettings.SEND_REDUNDANT_RESENDREQUESTS))
                 session.SendRedundantResendRequests = settings.GetBool(SessionSettings.SEND_REDUNDANT_RESENDREQUESTS);

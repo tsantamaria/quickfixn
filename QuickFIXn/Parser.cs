@@ -1,3 +1,6 @@
+using System;
+using System.Text;
+
 namespace QuickFix
 {
     /// <summary>
@@ -5,6 +8,20 @@ namespace QuickFix
     public class Parser
     {
         private byte[] buffer_ = new byte[512];
+        private readonly Encoding _messageEncoding;
+
+        #region Constructors
+
+        [Obsolete("Use constructor with encoding instead.")]
+        public Parser() : this(Encoding.UTF8) { }
+
+        public Parser(Encoding encoding)
+        {
+            _messageEncoding = encoding;
+        }
+
+        #endregion
+
         int usedBufferLength = 0;
         public void AddToStream(ref byte[] data, int bytesAdded)
         {
@@ -16,7 +33,7 @@ namespace QuickFix
 
         public void AddToStream(string data)
         {
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(data);
+            byte[] bytes = _messageEncoding.GetBytes(data);
             AddToStream(ref bytes, bytes.Length);
 
         }
@@ -74,7 +91,7 @@ namespace QuickFix
 
         public bool ExtractLength(out int length, out int pos, string buf)
         {
-            return ExtractLength(out length, out pos, System.Text.Encoding.UTF8.GetBytes(buf));
+            return ExtractLength(out length, out pos, _messageEncoding.GetBytes(buf));
         }
 
         public bool ExtractLength(out int length, out int pos, byte[] buf)
@@ -118,7 +135,7 @@ namespace QuickFix
 
         private int IndexOf(byte[] arrayToSearchThrough, string stringPatternToFind, int offset)
         {
-            byte[] patternToFind = System.Text.Encoding.UTF8.GetBytes(stringPatternToFind);
+            byte[] patternToFind = _messageEncoding.GetBytes(stringPatternToFind);
             if (patternToFind.Length > arrayToSearchThrough.Length)
                 return -1;
             for (int i = offset; i <= arrayToSearchThrough.Length - patternToFind.Length; i++)
@@ -151,7 +168,7 @@ namespace QuickFix
         {
             byte[] returnByte = new byte[length];
             System.Buffer.BlockCopy(array, startIndex, returnByte, 0, length);
-            return System.Text.Encoding.UTF8.GetString(returnByte);
+            return _messageEncoding.GetString(returnByte);
         }
     }
 }

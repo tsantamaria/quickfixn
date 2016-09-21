@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace QuickFix.Fields
 {
@@ -84,26 +85,38 @@ namespace QuickFix.Fields
             return Tag ^ Obj.GetHashCode();
         }
 
+        [Obsolete("Use method with Encoding.")]
+        public override int getLength()
+        {
+            return getLength(Encoding.UTF8);
+        }
+
         /// <summary>
         /// length of formatted field (including tag=val\001)
         /// </summary>
-        public override int getLength()
+        public override int getLength(Encoding encoding)
         {
             if (_changed)
                 makeStringFields();
-            return System.Text.Encoding.UTF8.GetByteCount(_stringField) + 1; // +1 for SOH
+            return encoding.GetByteCount(_stringField) + 1; // +1 for SOH
+        }
+
+        [Obsolete("Use method with Encoding.")]
+        public override int getTotal()
+        {
+            return getTotal(Encoding.UTF8);
         }
 
         /// <summary>
         /// checksum
         /// </summary>
-        public override int getTotal()
+        public override int getTotal(Encoding encoding)
         {
             if (_changed)
                 makeStringFields();
 
             int sum = 0;
-            byte[] array = System.Text.Encoding.UTF8.GetBytes(_stringField);
+            byte[] array = encoding.GetBytes(_stringField);
             foreach (byte b in array)
             {
                 sum += b;

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
 namespace QuickFix
 {
@@ -197,6 +198,23 @@ namespace QuickFix
             foreach (System.Collections.Generic.KeyValuePair<string, string> entry in toMerge.data_)
                 if(!data_.ContainsKey(entry.Key))
                     data_[entry.Key] = entry.Value;
+        }
+
+        public Encoding GetEncoding(string key)
+        {
+            try
+            {
+                var encoding = Encoding.GetEncoding(key);
+                return encoding;
+            }
+            catch (QuickFIXException)
+            {
+                throw new ConfigError("No value for key: " + key);
+            }
+            catch (ArgumentException)
+            {
+                throw new ConfigError("No recognized code page name for encoding.");
+            }
         }
         #endregion
 
