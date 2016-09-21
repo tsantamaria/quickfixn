@@ -202,14 +202,17 @@ namespace QuickFix
 
         public Encoding GetEncoding(string key)
         {
+            var encodingKey = "";
+
             try
             {
-                var encoding = Encoding.GetEncoding(key);
+                encodingKey = GetString(key);
+                var encoding = Encoding.GetEncoding(encodingKey);
                 return encoding;
             }
             catch (ArgumentException)
             {
-                throw new ConfigError("No recognized code page name for encoding.");
+                throw new ConfigError($"No recognized code page name for encoding. Key used: {encodingKey}");
             }
             catch (QuickFIXException)
             {
