@@ -477,8 +477,12 @@ namespace QuickFix.DataDictionary
 			String tagstr = fldEl.Attributes["number"].Value;
 			String name = fldEl.Attributes["name"].Value;
 			String fldType = fldEl.Attributes["type"].Value;
-		    var allowOtherValues = Convert.ToBoolean(fldEl.Attributes["allowOtherValues"].Value);
-			int tag = QuickFix.Fields.Converters.IntConverter.Convert(tagstr);
+
+            var allowOtherValues = false;
+            if(fldEl.Attributes["allowOtherValues"] != null)
+                allowOtherValues = Convert.ToBoolean(fldEl.Attributes["allowOtherValues"].Value);
+
+            int tag = QuickFix.Fields.Converters.IntConverter.Convert(tagstr);
 			Dictionary<String, String> enums = new Dictionary<String, String>();
 			if (fldEl.HasChildNodes)
 			{
