@@ -336,7 +336,7 @@ namespace QuickFix.DataDictionary
 		public void CheckValue(Fields.IField field)
 		{
 			DDField fld = FieldsByTag[ field.Tag ];
-			if( fld.HasEnums() || !fld.AllowOtherValues )
+			if( fld.HasEnums() && !fld.AllowOtherValues )
 				if( fld.IsMultipleValueFieldWithEnums )
 				{
 					string [] splitted = field.ToString().Split( ' ' );
